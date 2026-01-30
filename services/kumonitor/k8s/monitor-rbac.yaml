@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kumonitor-sa
+  namespace: system-apps
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kumonitor-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log", "services", "namespaces", "persistentvolumeclaims"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["*"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kumonitor-role-binding
+subjects:
+- kind: ServiceAccount
+  name: kumonitor-sa
+  namespace: system-apps
+roleRef:
+  kind: ClusterRole
+  name: kumonitor-role
+  apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: postgresql-proxy-pdb
+  namespace: system-apps
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: postgresql-proxy

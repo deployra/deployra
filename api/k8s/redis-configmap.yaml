@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: system-apps
+data:
+  redis.conf: |
+    # Redis configuration
+    port 6379
+    bind 0.0.0.0
+    protected-mode yes
+
+    # Disable default user
+    user default off
+
+    # Configure ACL for service user
+    # Password will be injected via environment variable
+    user deployra on ><REDIS_PASSWORD> ~* &* +@all
+
+    # Security settings
+    rename-command FLUSHALL ""
+    rename-command FLUSHDB ""
+    rename-command DEBUG ""
+
+    # Performance
+    maxmemory-policy volatile-lru
+
+    # Persistence
+    appendonly yes
+    save 900 1
+    save 300 10
+    save 60 10000

@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-proxy
+  namespace: system-apps
+  labels:
+    app: ingress-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingress-proxy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: ingress-proxy
+    spec:
+      containers:
+      - name: ingress-proxy
+        # Replace with your ECR registry URL
+        # Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/deployra/ingress-proxy:latest
+        image: <YOUR_ECR_REGISTRY>/ingress-proxy:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: http
+        - containerPort: 443
+          name: https
+        - containerPort: 3306
+          name: mysql
+        - containerPort: 6379
+          name: memory
+        - containerPort: 8088
+          name: health
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      imagePullSecrets:
+        - name: ecr-credentials

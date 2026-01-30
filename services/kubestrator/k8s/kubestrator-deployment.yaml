@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubestrator
+  namespace: system-apps
+  labels:
+    app: kubestrator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubestrator
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: kubestrator
+    spec:
+      serviceAccountName: kubestrator-sa
+      containers:
+      - name: kubestrator
+        # Replace with your ECR registry URL
+        # Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/kubestrator:latest
+        image: <YOUR_ECR_REGISTRY>/kubestrator:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: kubestrator
+        envFrom:
+          - secretRef:
+              name: kubestrator-secret
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      imagePullSecrets:
+        - name: ecr-credentials

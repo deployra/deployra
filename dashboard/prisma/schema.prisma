@@ -1,0 +1,528 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @unique
+  email         String    @unique
+  password      String
+  emailVerified DateTime?
+  firstName     String?
+  lastName      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  apiKeys       ApiKey[]
+}
+
+model Organization {
+  id             String          @id @unique
+  name           String
+  description    String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  userId         String
+  gitProviders   GitProvider[]
+  githubAccounts GithubAccount[]
+  projects       Project[]
+
+  @@index([userId])
+}
+
+model GithubAccount {
+  id             String        @id @unique
+  username       String
+  accessToken    String        @db.Text
+  refreshToken   String?       @db.Text
+  expiresAt      DateTime?
+  organizationId String
+  avatarUrl      String?
+  email          String?
+  scope          String?
+  tokenType      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+  gitProviders   GitProvider[]
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, username])
+  @@index([organizationId])
+}
+
+model GitProvider {
+  id                  String         @id @unique
+  organizationId      String
+  type                GitProviderType
+  githubAccountId     String?
+  installationId      String?
+  repositorySelection String?
+  permissions         Json?
+  url                 String?        // New field for custom Git URL
+  username            String?        // New field for custom Git username
+  password            String?        // New field for custom Git password (should be encrypted)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  deletedAt           DateTime?
+  githubAccount       GithubAccount? @relation(fields: [githubAccountId], references: [id], onDelete: Cascade)
+  organization        Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  services            Service[]
+
+  @@unique([organizationId, githubAccountId])
+  @@index([organizationId])
+  @@index([githubAccountId])
+}
+
+model Project {
+  id             String       @id @unique
+  name           String
+  description    String?
+  organizationId String
+  webhookUrl     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  services       Service[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model ServiceTypeTag {
+  id          String        @id @unique
+  label       String        
+  index       Int
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  serviceTypes ServiceType[]
+}
+
+model ServiceType {
+  id          String    @id @unique
+  title       String
+  description String
+  tagId       String   
+  index       Int      
+  isVisible   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  services    Service[]
+  instanceTypeGroups InstanceTypeGroup[]
+  tag         ServiceTypeTag @relation(fields: [tagId], references: [id])
+
+  @@index([tagId])
+}
+
+model InstanceTypeGroup {
+  id          String         @id @unique
+  name        String
+  description String?
+  serviceTypeId String
+  index       Int            @default(0)
+  isVisible   Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  instanceTypes InstanceType[]
+  serviceType ServiceType    @relation(fields: [serviceTypeId], references: [id])
+
+  @@index([serviceTypeId])
+}
+
+model InstanceType {
+  id                String           @id @unique
+  name              String
+  description       String?
+  instanceTypeGroupId String
+  cpuCount          Float
+  memoryMB          Int
+  index             Int              @default(0)
+  isVisible         Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  instanceTypeGroup InstanceTypeGroup @relation(fields: [instanceTypeGroupId], references: [id])
+  services          Service[]
+  pods              PodTracking[]
+  scalingHistory    ServiceScalingHistory[]
+
+  @@index([instanceTypeGroupId])
+}
+
+model Service {
+  id                           String         @id @unique
+  name                         String
+  serviceTypeId                String
+  projectId                    String
+  gitProviderId                String?
+  repositoryName               String?
+  branch                       String?
+  runtimeFilePath              String?
+  runtime                      Runtime  @default(IMAGE)
+  environmentVariables         Json?
+  createdAt                    DateTime       @default(now())
+  updatedAt                    DateTime       @updatedAt
+  status                       ServiceStatus  @default(PENDING)
+  deployedAt                   DateTime?
+  subdomain                    String?        @unique
+  customDomain                 String?
+  healthCheckPath              String?
+  autoScalingEnabled           Boolean        @default(false)
+  autoDeployEnabled            Boolean        @default(true)
+  maxReplicas                  Int            @default(1)
+  minReplicas                  Int            @default(1)
+  replicas                     Int            @default(1)
+  targetCPUUtilizationPercentage Int?
+  containerRegistryType        String?
+  containerRegistryImageUri    String?        @db.Text
+  containerRegistryUsername               String?
+  containerRegistryPassword               String?        @db.Text
+  instanceTypeId               String
+  instanceTypeChangedAt        DateTime?
+  deletedAt                    DateTime?
+  deployments                  Deployment[]
+  ports                        ServicePort[]
+  gitProvider                  GitProvider?   @relation(fields: [gitProviderId], references: [id])
+  project                      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  events                       ServiceEvent[]
+  serviceType                  ServiceType    @relation(fields: [serviceTypeId], references: [id])
+  instanceType                 InstanceType   @relation(fields: [instanceTypeId], references: [id])
+  credentials                  ServiceCredential?
+  currentReplicas              Int            @default(1)
+  targetReplicas               Int            @default(1)
+  storageCapacity              Int?
+  storageCapacityChangedAt     DateTime?
+  storageClass                 String?
+  storageUsage                 Float?
+  scalingStatus                ServiceScalingStatus @default(IDLE)
+  scalingHistory               ServiceScalingHistory[]
+  metrics                      ServiceMetrics[]
+  podMetrics                   PodMetrics[]
+  cronJobs                     CronJob[]
+
+  @@index([projectId])
+  @@index([gitProviderId])
+  @@index([serviceTypeId])
+  @@index([instanceTypeId])
+}
+
+model CronJob {
+  id          String    @id @default(uuid()) @unique
+  name        String
+  schedule    String
+  path        String
+  headers     Json?
+  enabled     Boolean   @default(true)
+  serviceId   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastRunAt   DateTime?
+  nextRunAt   DateTime?
+  service     Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  executions  CronJobExecution[]
+
+  @@index([serviceId])
+  @@unique([serviceId, name])
+}
+
+model CronJobExecution {
+  id          String    @id @default(uuid()) @unique
+  cronJobId   String
+  status      String    // success, failed
+  statusCode  Int?
+  response    String?
+  error       String?
+  executedAt  DateTime
+  createdAt   DateTime  @default(now())
+  cronJob     CronJob   @relation(fields: [cronJobId], references: [id], onDelete: Cascade)
+
+  @@index([cronJobId])
+  @@index([executedAt])
+}
+
+model ServiceScalingHistory {
+  id           Int        @id @default(autoincrement()) @unique
+  serviceId    String
+  deploymentId String?
+  instanceTypeId String
+  replicaCount Int
+  createdAt    DateTime       @default(now())
+  service      Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  deployment   Deployment?    @relation(fields: [deploymentId], references: [id])
+  instanceType InstanceType   @relation(fields: [instanceTypeId], references: [id])
+
+  @@index([serviceId])
+  @@index([deploymentId])
+  @@index([instanceTypeId])
+}
+
+model ServiceCredential {
+  id           String   @id @default(uuid()) @unique
+  serviceId    String   @unique
+  host         String
+  port         Int      @default(3306)
+  username     String
+  password     String
+  database     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  service      Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId])
+}
+
+model ServiceEvent {
+  id           Int      @id @default(autoincrement()) @unique
+  serviceId    String
+  type         EventType
+  message      String?
+  createdAt    DateTime    @default(now())
+  deploymentId String?     @map("deployment_id")
+  deployment   Deployment? @relation(fields: [deploymentId], references: [id])
+  service      Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  
+  // Store payload as JSON
+  payload      Json?
+
+  @@index([serviceId])
+  @@index([deploymentId])
+}
+
+model Deployment {
+  id               String           @id
+  serviceId        String
+  deploymentNumber Int              @default(1)
+  status           DeploymentStatus @default(PENDING)
+  commitSha        String?
+  branch           String?
+  triggeredBy      String?
+  triggerType      String
+  startedAt        DateTime         @default(now())
+  completedAt      DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  service          Service          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  logs             DeploymentLog[]
+  events           ServiceEvent[]
+  scalingHistory   ServiceScalingHistory[]
+
+  @@index([serviceId])
+}
+
+model DeploymentLog {
+  id           Int     @id @default(autoincrement()) @unique
+  deploymentId String
+  type         LogType    @default(STDOUT)
+  text         String     @db.Text
+  createdAt    DateTime   @default(now())
+  deployment   Deployment @relation(fields: [deploymentId], references: [id])
+
+  @@index([deploymentId])
+}
+
+model ServiceMetrics {
+  id                  Int              @id @default(autoincrement()) @unique
+  serviceId           String
+  deploymentId        String?
+  totalCpuUsage       Float            // Total CPU usage in millicores
+  avgCpuUsage         Float            // Average CPU usage in millicores
+  totalMemoryUsage    Float            // Total memory usage in bytes
+  avgMemoryUsage      Float            // Average memory usage in bytes
+  cpuUtilizationPercentage Float?      // CPU usage as percentage of limit
+  memoryUtilizationPercentage Float?   // Memory usage as percentage of limit
+  timestamp                DateTime
+  createdAt                DateTime    @default(now())
+  service                  Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  podMetrics               PodMetrics[]
+
+  @@index([serviceId])
+  @@index([deploymentId])
+  @@index([timestamp])
+}
+
+model PodMetrics {
+  id                Int           @id @default(autoincrement()) @unique
+  podId             String
+  serviceId         String
+  serviceMetricsId  Int
+  cpuUsage          Float         // CPU usage in millicores
+  cpuLimit          Float?        // CPU limit in millicores
+  memoryUsage       Float         // Memory usage in bytes
+  memoryLimit       Float?        // Memory limit in bytes
+  timestamp         DateTime
+  createdAt         DateTime      @default(now())
+  service           Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceMetrics    ServiceMetrics @relation(fields: [serviceMetricsId], references: [id])
+
+  @@index([podId])
+  @@index([serviceId])
+  @@index([serviceMetricsId])
+  @@index([timestamp])
+}
+
+model ServicePort {
+  id                Int       @id @default(autoincrement()) @unique
+  serviceId         String
+  servicePort       Int       @default(80)    // External port exposed to clients
+  containerPort     Int       @default(3000)  // Internal port where the application is listening
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  service           Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  
+  @@index([serviceId])
+}
+
+model PodTracking {
+  id                  Int              @id @default(autoincrement()) @unique
+  podId               String              
+  serviceId           String
+  deploymentId        String?
+  instanceTypeId      String
+  phase               PodPhase            @default(UNKNOWN)
+  containerState      ContainerState?
+  containerStateReason ContainerStateReason?
+  startTime           DateTime
+  endTime             DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  instanceType        InstanceType       @relation(fields: [instanceTypeId], references: [id])
+
+  @@unique([podId, serviceId])
+  @@index([serviceId])
+  @@index([deploymentId])
+  @@index([instanceTypeId])
+}
+
+model Template {
+  id          String    @id @default(uuid()) @unique
+  slug        String    @unique
+  title       String
+  description String    @db.Text
+  content     String?   @db.LongText  // Rich content for SEO
+  category    String
+  tags        String?   // Comma-separated tags for filtering
+  yamlTemplate String   @db.LongText
+  author      String
+  featured    Boolean   @default(false)
+  published   Boolean   @default(false)
+  usageCount  Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([slug])
+  @@index([category])
+  @@index([published])
+  @@index([featured])
+}
+
+model AccessRequest {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  status    String   @default("pending") // pending, approved, rejected
+}
+
+enum ServiceStatus {
+  PENDING
+  DEPLOYING
+  RUNNING
+  STOPPED
+  SUSPENDED
+  SLEEPING
+  RESTARTING
+  FAILED
+}
+
+enum ServiceScalingStatus {
+  IDLE
+  SCALING
+}
+
+enum EventType {
+  DEPLOY_STARTED
+  DEPLOY_COMPLETED
+  DEPLOY_FAILED
+  DEPLOY_CANCELLED
+  SERVICE_RESTART_STARTED
+  SERVICE_RESTART_COMPLETED
+  CONFIG_UPDATED
+  SERVICE_SCALED
+  SERVICE_SCALING
+}
+
+enum DeploymentStatus {
+  PENDING
+  BUILDING
+  BUILDED
+  DEPLOYING
+  DEPLOYED
+  FAILED
+  CANCELLED
+}
+
+enum LogType {
+  STDOUT
+  STDERR
+  INFO
+  WARNING
+  ERROR
+}
+
+enum PodPhase {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  UNKNOWN
+}
+
+enum ContainerState {
+  WAITING
+  RUNNING
+  TERMINATED
+}
+
+enum ContainerStateReason {
+  CRASH_LOOP_BACKOFF
+  IMAGE_PULL_BACKOFF
+  ERR_IMAGE_PULL
+  CONTAINER_CREATING
+  POD_INITIALIZING
+  OOM_KILLED
+  COMPLETED
+  ERROR
+  TERMINATING
+  CREATE_CONTAINER_ERROR
+}
+
+enum Runtime {
+  DOCKER
+  IMAGE
+}
+
+enum GitProviderType {
+  GITHUB
+  CUSTOM
+}
+
+model ApiKey {
+  id             String    @id @unique @default(uuid())
+  name           String
+  key            String    @unique
+  userId         String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  expiresAt      DateTime?
+  lastUsedAt     DateTime?
+  revoked        Boolean   @default(false)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+

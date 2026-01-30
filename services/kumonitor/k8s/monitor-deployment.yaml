@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kumonitor
+  namespace: system-apps
+  labels:
+    app: kumonitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kumonitor
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: kumonitor
+    spec:
+      serviceAccountName: kumonitor-sa
+      containers:
+      - name: kumonitor
+        # Replace with your ECR registry URL
+        # Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/kumonitor:latest
+        image: <YOUR_ECR_REGISTRY>/kumonitor:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: kumonitor
+        envFrom:
+          - secretRef:
+              name: kumonitor-secret
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      imagePullSecrets:
+        - name: ecr-credentials

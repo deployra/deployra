@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard
+  namespace: system-apps
+  labels:
+    app: dashboard
+    # Labels for web-proxy discovery
+    managedBy: kubestrator
+    type: web
+    project: system
+    service: dashboard
+    # Domain routing - change to your domain
+    domain-0: app.example.com
+spec:
+  selector:
+    app: dashboard
+  ports:
+  - port: 80
+    targetPort: 3000
+    name: http

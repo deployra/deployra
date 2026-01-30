@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memory-proxy
+  namespace: system-apps
+  labels:
+    app: memory-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: memory-proxy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: memory-proxy
+    spec:
+      serviceAccountName: memory-proxy-sa
+      containers:
+      - name: memory-proxy
+        # Replace with your ECR registry URL
+        # Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/deployra/memory-proxy:latest
+        image: <YOUR_ECR_REGISTRY>/memory-proxy:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 6379
+          name: memory
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      imagePullSecrets:
+        - name: ecr-credentials

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql-proxy
+  namespace: system-apps
+  labels:
+    app: postgresql-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql-proxy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: postgresql-proxy
+    spec:
+      serviceAccountName: postgresql-proxy-sa
+      containers:
+      - name: postgresql-proxy
+        # Replace with your ECR registry URL
+        # Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/deployra/postgresql-proxy:latest
+        image: <YOUR_ECR_REGISTRY>/postgresql-proxy:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5432
+          name: pgsql
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      imagePullSecrets:
+        - name: ecr-credentials

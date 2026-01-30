@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-proxy-service
+  namespace: system-apps
+  labels:
+    app: ingress-proxy
+  annotations:
+    load-balancer.hetzner.cloud/name: "deployra-ingress"
+    load-balancer.hetzner.cloud/use-private-ip: "true"
+    load-balancer.hetzner.cloud/location: "nbg1"
+    load-balancer.hetzner.cloud/type: "lb11"
+    load-balancer.hetzner.cloud/uses-proxyprotocol: "false"
+    load-balancer.hetzner.cloud/health-check-port: "30088"
+    load-balancer.hetzner.cloud/health-check-protocol: "http"
+    load-balancer.hetzner.cloud/health-check-http-path: "/healtz"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 443
+    protocol: TCP
+    name: https
+  - port: 3306
+    targetPort: 3306
+    protocol: TCP
+    name: mysql
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: memory
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgresql
+  selector:
+    app: ingress-proxy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-proxy-health-service
+  namespace: system-apps
+  labels:
+    app: ingress-proxy
+spec:
+  type: NodePort
+  ports:
+  - port: 8088
+    targetPort: 8088
+    nodePort: 30088
+    protocol: TCP
+    name: health
+  selector:
+    app: ingress-proxy
