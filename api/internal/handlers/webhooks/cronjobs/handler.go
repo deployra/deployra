@@ -162,7 +162,7 @@ func UpdateStatus(c *fiber.Ctx) error {
 		updates["nextRunAt"] = nextRunAt
 	}
 
-	if err := db.Model(&cronJob).Updates(updates).Error; err != nil {
+	if err := db.Model(&models.CronJob{}).Where("id = ?", cronJobID).Updates(updates).Error; err != nil {
 		return response.InternalServerError(c, "Failed to update CronJob status")
 	}
 

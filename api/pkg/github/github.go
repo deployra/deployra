@@ -282,7 +282,7 @@ func EnsureValidGithubToken(githubAccountID string) (*models.GithubAccount, erro
 		updates["refreshToken"] = tokenData.RefreshToken
 	}
 
-	if err := db.Model(&githubAccount).Updates(updates).Error; err != nil {
+	if err := db.Model(&models.GithubAccount{}).Where("id = ?", githubAccountID).Updates(updates).Error; err != nil {
 		return nil, fmt.Errorf("failed to update GitHub account with new token: %w", err)
 	}
 

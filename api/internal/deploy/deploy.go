@@ -2,8 +2,8 @@ package deploy
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/deployra/deployra/api/internal/config"
@@ -13,6 +13,27 @@ import (
 	"github.com/deployra/deployra/api/internal/redis"
 	"github.com/deployra/deployra/api/internal/utils"
 )
+
+// Shell operator regex for detecting shell syntax
+var shellOperatorRegex = regexp.MustCompile(`[&|;$><]|\$\(|\$\{`)
+
+// parseContainerCommand - Railway-style parsing
+// If shell operators are detected: ["sh", "-c", "<command>"]
+// Otherwise: split by whitespace
+func parseContainerCommand(command string) []string {
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return nil
+	}
+
+	// Check for shell operators
+	if shellOperatorRegex.MatchString(command) {
+		return []string{"sh", "-c", command}
+	}
+
+	// Simple command: split by whitespace
+	return strings.Fields(command)
+}
 
 // BuildService starts a new build for a service
 func BuildService(serviceID string, userID string, triggerType string, commitSha string) (*models.Deployment, error) {
@@ -232,10 +253,10 @@ func DeployService(deployType string, deploymentID *string, serviceID string) er
 		})
 	}
 
-	// Parse container command if present
+	// Parse container command if present (Railway-style parsing)
 	var command []string
 	if service.ContainerCommand != nil && *service.ContainerCommand != "" {
-		json.Unmarshal([]byte(*service.ContainerCommand), &command)
+		command = parseContainerCommand(*service.ContainerCommand)
 	}
 
 	// Build the deployment job

@@ -349,7 +349,7 @@ func Update(c *fiber.Ctx) error {
 
 	// Update cronjob
 	if len(updates) > 0 {
-		if err := db.Model(&cronJob).Updates(updates).Error; err != nil {
+		if err := db.Model(&models.CronJob{}).Where("id = ?", cronJobID).Updates(updates).Error; err != nil {
 			return response.InternalServerError(c, "Failed to update cronjob")
 		}
 	}

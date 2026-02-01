@@ -66,7 +66,7 @@ func UpdateStatus(c *fiber.Ctx) error {
 	}
 
 	// Update the service status
-	if err := db.Model(&service).Updates(map[string]interface{}{
+	if err := db.Model(&models.Service{}).Where("id = ?", serviceID).Updates(map[string]interface{}{
 		"status":    req.Status,
 		"updatedAt": time.Now(),
 	}).Error; err != nil {
@@ -140,7 +140,7 @@ func UpdateReplicas(c *fiber.Ctx) error {
 	}
 
 	// Update the service
-	if err := db.Model(&service).Updates(map[string]interface{}{
+	if err := db.Model(&models.Service{}).Where("id = ?", serviceID).Updates(map[string]interface{}{
 		"currentReplicas": fixedCurrentReplicas,
 		"targetReplicas":  req.TargetReplicas,
 		"scalingStatus":   newScalingStatus,
@@ -283,7 +283,7 @@ func HandlePodEvent(c *fiber.Ctx) error {
 			updates["endTime"] = timestamp
 		}
 
-		db.Model(&existing).Updates(updates)
+		db.Model(&models.PodTracking{}).Where("podId = ? AND serviceId = ?", req.PodID, serviceID).Updates(updates)
 	}
 
 	return response.Success(c, fiber.Map{

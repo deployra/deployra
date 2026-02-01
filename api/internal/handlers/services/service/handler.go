@@ -263,7 +263,7 @@ func Update(c *fiber.Ctx) error {
 
 	// Update service
 	if len(updates) > 0 {
-		if err := db.Model(&service).Updates(updates).Error; err != nil {
+		if err := db.Model(&models.Service{}).Where("id = ?", serviceID).Updates(updates).Error; err != nil {
 			return response.InternalServerError(c, "Failed to update service")
 		}
 	}

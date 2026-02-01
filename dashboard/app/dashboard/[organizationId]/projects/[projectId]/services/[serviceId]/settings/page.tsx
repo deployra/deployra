@@ -122,16 +122,9 @@ export default function ServiceSettingsPage() {
         setNewStorageCapacity(serviceData.storageCapacity);
       }
 
-      // Parse container command from JSON string to display format
+      // Container command is now stored as plain string (Railway-style)
       if (serviceData.containerCommand) {
-        try {
-          const cmdArray = JSON.parse(serviceData.containerCommand);
-          if (Array.isArray(cmdArray)) {
-            setContainerCommandState(cmdArray.join(' '));
-          }
-        } catch {
-          setContainerCommandState('');
-        }
+        setContainerCommandState(serviceData.containerCommand);
       }
 
       // Load instance type groups if service has a service type
@@ -260,9 +253,8 @@ export default function ServiceSettingsPage() {
 
     try {
       setContainerCommandLoading(true);
-      // Convert space-separated command to JSON array string
-      const cmdArray = containerCommandState.trim() ? containerCommandState.trim().split(/\s+/) : [];
-      const containerCommand = cmdArray.length > 0 ? JSON.stringify(cmdArray) : null;
+      // Store as plain string (Railway-style), parsing happens in Go API
+      const containerCommand = containerCommandState.trim() || null;
       const updatedService = await updateServiceSettings(serviceId, { containerCommand });
       setService(updatedService);
       setContainerCommandEditing(false);
@@ -623,7 +615,7 @@ export default function ServiceSettingsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="container-command">Container Command (Optional)</Label>
                   <p className="text-sm text-muted-foreground">
-                    Overrides the default container ENTRYPOINT/CMD. Enter the command as you would in a shell.
+                    Overrides the default container ENTRYPOINT/CMD. Shell operators (&&, ||, |, $, etc.) are automatically detected and wrapped with <code className="bg-muted px-1 rounded">sh -c</code>.
                   </p>
                   <div className="flex items-center gap-2">
                     <Input
@@ -654,19 +646,8 @@ export default function ServiceSettingsPage() {
                           variant="outline"
                           onClick={() => {
                             setContainerCommandEditing(false);
-                            // Reset to original value
-                            if (service?.containerCommand) {
-                              try {
-                                const cmdArray = JSON.parse(service.containerCommand);
-                                if (Array.isArray(cmdArray)) {
-                                  setContainerCommandState(cmdArray.join(' '));
-                                }
-                              } catch {
-                                setContainerCommandState('');
-                              }
-                            } else {
-                              setContainerCommandState('');
-                            }
+                            // Reset to original value (plain string)
+                            setContainerCommandState(service?.containerCommand || '');
                           }}
                           disabled={containerCommandLoading}
                         >
