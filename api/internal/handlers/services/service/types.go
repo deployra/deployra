@@ -2,19 +2,20 @@ package service
 
 // UpdateServiceRequest represents the request body for updating a service
 type UpdateServiceRequest struct {
-	Name                         *string              `json:"name"`
-	EnvironmentVariables         []EnvironmentVar     `json:"environmentVariables"`
-	Replicas                     *int                 `json:"replicas"`
-	TargetCPUUtilizationPercentage *int               `json:"targetCPUUtilizationPercentage"`
-	MinReplicas                  *int                 `json:"minReplicas"`
-	MaxReplicas                  *int                 `json:"maxReplicas"`
-	AutoScalingEnabled           *bool                `json:"autoScalingEnabled"`
-	AutoDeployEnabled            *bool                `json:"autoDeployEnabled"`
-	CustomDomain                 *string              `json:"customDomain"`
-	HealthCheckPath              *string              `json:"healthCheckPath"`
-	InstanceTypeID               *string              `json:"instanceTypeId"`
-	StorageCapacity              *int                 `json:"storageCapacity"`
-	PortSettings                 []PortSetting        `json:"portSettings"`
+	Name                           *string          `json:"name"`
+	EnvironmentVariables           []EnvironmentVar `json:"environmentVariables"`
+	Replicas                       *int             `json:"replicas"`
+	TargetCPUUtilizationPercentage *int             `json:"targetCPUUtilizationPercentage"`
+	MinReplicas                    *int             `json:"minReplicas"`
+	MaxReplicas                    *int             `json:"maxReplicas"`
+	AutoScalingEnabled             *bool            `json:"autoScalingEnabled"`
+	AutoDeployEnabled              *bool            `json:"autoDeployEnabled"`
+	CustomDomain                   *string          `json:"customDomain"`
+	HealthCheckPath                *string          `json:"healthCheckPath"`
+	InstanceTypeID                 *string          `json:"instanceTypeId"`
+	StorageCapacity                *int             `json:"storageCapacity"`
+	PortSettings                   []PortSetting    `json:"portSettings"`
+	ContainerCommand               *string          `json:"containerCommand"`
 }
 
 // EnvironmentVar represents an environment variable

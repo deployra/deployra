@@ -1535,10 +1535,15 @@ class KubeStratorService {
 
     const hpaName = `${config.serviceId}-hpa`;
 
-    if (!config.scaling || !config.scaling.maxReplicas || !config.scaling.targetCPUUtilizationPercentage || !config.autoScalingEnabled) {
+    // Storage attached services cannot use HPA (RWO PVC can only be mounted by one pod)
+    // Also check other scaling conditions
+    if (config.storage || !config.scaling || !config.scaling.maxReplicas || !config.scaling.targetCPUUtilizationPercentage || !config.autoScalingEnabled) {
       // Delete HPA if exists
       try {
         await this.customObjectsApi.deleteNamespacedCustomObject('autoscaling', 'v2', namespace, 'horizontalpodautoscalers', hpaName);
+        if (config.storage) {
+          logger.info(`Deleted HPA ${hpaName} because storage is attached (scaling disabled)`);
+        }
       } catch (error) {
         logger.warn(`Error deleting HPA ${hpaName}: ${error}`);
       }

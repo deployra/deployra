@@ -125,6 +125,7 @@ export interface Service {
   runtimeFilePath?: string; // Path to the Dockerfile within the repository
   ports?: ServicePort[];
   scaleToZeroEnabled?: boolean; // Scale to zero feature for free instances
+  containerCommand?: string; // Container command override (JSON string)
 }
 
 export interface ServiceCredential {
@@ -238,6 +239,7 @@ export interface CreateServiceInput {
   portSettings?: { servicePort: number; containerPort: number }[];
   storageCapacity?: number;
   instanceTypeId: string;
+  containerCommand?: string[];
 }
 
 export interface UpdateServiceScalingInput {

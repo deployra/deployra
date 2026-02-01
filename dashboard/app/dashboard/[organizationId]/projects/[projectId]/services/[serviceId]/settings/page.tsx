@@ -84,6 +84,11 @@ export default function ServiceSettingsPage() {
   const [portSettingsEditing, setPortSettingsEditing] = useState(false);
   const [portSettingsLoading, setPortSettingsLoading] = useState(false);
 
+  // Container command state
+  const [containerCommandState, setContainerCommandState] = useState('');
+  const [containerCommandLoading, setContainerCommandLoading] = useState(false);
+  const [containerCommandEditing, setContainerCommandEditing] = useState(false);
+
   // DNS configuration dialog state
   const [dnsConfigDialogOpen, setDnsConfigDialogOpen] = useState(false);
 
@@ -115,6 +120,18 @@ export default function ServiceSettingsPage() {
       if (serviceData.storageCapacity) {
         setStorageCapacity(serviceData.storageCapacity);
         setNewStorageCapacity(serviceData.storageCapacity);
+      }
+
+      // Parse container command from JSON string to display format
+      if (serviceData.containerCommand) {
+        try {
+          const cmdArray = JSON.parse(serviceData.containerCommand);
+          if (Array.isArray(cmdArray)) {
+            setContainerCommandState(cmdArray.join(' '));
+          }
+        } catch {
+          setContainerCommandState('');
+        }
       }
 
       // Load instance type groups if service has a service type
@@ -238,6 +255,26 @@ export default function ServiceSettingsPage() {
     }
   };
   
+  const saveContainerCommand = async () => {
+    if (!containerCommandEditing) return;
+
+    try {
+      setContainerCommandLoading(true);
+      // Convert space-separated command to JSON array string
+      const cmdArray = containerCommandState.trim() ? containerCommandState.trim().split(/\s+/) : [];
+      const containerCommand = cmdArray.length > 0 ? JSON.stringify(cmdArray) : null;
+      const updatedService = await updateServiceSettings(serviceId, { containerCommand });
+      setService(updatedService);
+      setContainerCommandEditing(false);
+      toast.success('Container command updated');
+    } catch (error) {
+      console.error('Error updating container command:', error);
+      toast.error('Failed to update container command');
+    } finally {
+      setContainerCommandLoading(false);
+    }
+  };
+
   // Save instance type changes
   const saveInstanceType = async (instanceTypeId: string) => {
     if (!service || instanceTypeId === service.instanceType?.id) return;
@@ -581,6 +618,64 @@ export default function ServiceSettingsPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Container Command Section */}
+                <div className="space-y-2">
+                  <Label htmlFor="container-command">Container Command (Optional)</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Overrides the default container ENTRYPOINT/CMD. Enter the command as you would in a shell.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="container-command"
+                      value={containerCommandState || ''}
+                      onChange={(e) => setContainerCommandState(e.target.value)}
+                      placeholder="e.g., node server.js or python -m flask run"
+                      disabled={!containerCommandEditing}
+                      className="flex-1"
+                    />
+                    {!containerCommandEditing ? (
+                      <Button
+                        variant="outline"
+                        onClick={() => setContainerCommandEditing(true)}
+                      >
+                        Edit
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="default"
+                          onClick={saveContainerCommand}
+                          disabled={containerCommandLoading}
+                        >
+                          {containerCommandLoading ? 'Saving...' : 'Save'}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setContainerCommandEditing(false);
+                            // Reset to original value
+                            if (service?.containerCommand) {
+                              try {
+                                const cmdArray = JSON.parse(service.containerCommand);
+                                if (Array.isArray(cmdArray)) {
+                                  setContainerCommandState(cmdArray.join(' '));
+                                }
+                              } catch {
+                                setContainerCommandState('');
+                              }
+                            } else {
+                              setContainerCommandState('');
+                            }
+                          }}
+                          disabled={containerCommandLoading}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </>
           )}
@@ -588,7 +683,6 @@ export default function ServiceSettingsPage() {
       </Card>)}
 
 
-      
       {!loading && (service?.serviceTypeId === 'web') && (<Card>
         <CardHeader>
           <CardTitle>Custom Domains</CardTitle>

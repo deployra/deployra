@@ -99,6 +99,7 @@ func Get(c *fiber.Ctx) error {
 		"targetReplicas":            service.TargetReplicas,
 		"storageCapacity":           service.StorageCapacity,
 		"scalingStatus":             service.ScalingStatus,
+		"containerCommand":          service.ContainerCommand,
 	})
 }
 
@@ -256,6 +257,9 @@ func Update(c *fiber.Ctx) error {
 		updates["storageCapacity"] = *req.StorageCapacity
 		updates["storageCapacityChangedAt"] = time.Now()
 	}
+	if req.ContainerCommand != nil {
+		updates["containerCommand"] = *req.ContainerCommand
+	}
 
 	// Update service
 	if len(updates) > 0 {
@@ -333,6 +337,7 @@ func Update(c *fiber.Ctx) error {
 		"ports":              service.Ports,
 		"scaleToZeroEnabled": scaleToZeroEnabled,
 		"storageCapacity":    service.StorageCapacity,
+		"containerCommand":   service.ContainerCommand,
 	})
 }
 
@@ -436,7 +441,6 @@ func Restart(c *fiber.Ctx) error {
 		"message": "Service restart initiated",
 	})
 }
-
 
 // GET /api/services/:serviceId/deployments
 func GetDeployments(c *fiber.Ctx) error {
@@ -775,4 +779,3 @@ func GetPods(c *fiber.Ctx) error {
 
 	return response.Success(c, pods)
 }
-

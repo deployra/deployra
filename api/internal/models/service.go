@@ -39,6 +39,7 @@ type Service struct {
 	StorageCapacityChangedAt       *time.Time              `gorm:"column:storageCapacityChangedAt" json:"storageCapacityChangedAt,omitempty"`
 	StorageClass                   *string                 `gorm:"size:191;column:storageClass" json:"storageClass,omitempty"`
 	StorageUsage                   *float64                `gorm:"column:storageUsage" json:"storageUsage,omitempty"`
+	ContainerCommand               *string                 `gorm:"type:text;column:containerCommand" json:"containerCommand,omitempty"`
 	ScalingStatus                  ServiceScalingStatus    `gorm:"size:191;default:IDLE;column:scalingStatus" json:"scalingStatus"`
 	Deployments                    []Deployment            `gorm:"foreignKey:ServiceID" json:"deployments,omitempty"`
 	Ports                          []ServicePort           `gorm:"foreignKey:ServiceID" json:"ports,omitempty"`

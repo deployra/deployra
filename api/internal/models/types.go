@@ -20,11 +20,17 @@ func (j *JSON) Scan(value interface{}) error {
 		*j = nil
 		return nil
 	}
-	bytes, ok := value.([]byte)
-	if !ok {
+	switch v := value.(type) {
+	case []byte:
+		// Make a copy! GORM reuses the buffer for subsequent queries
+		copied := make([]byte, len(v))
+		copy(copied, v)
+		*j = JSON(copied)
+	case string:
+		*j = JSON([]byte(v))
+	default:
 		return nil
 	}
-	*j = JSON(bytes)
 	return nil
 }
 

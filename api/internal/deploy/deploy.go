@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -231,6 +232,12 @@ func DeployService(deployType string, deploymentID *string, serviceID string) er
 		})
 	}
 
+	// Parse container command if present
+	var command []string
+	if service.ContainerCommand != nil && *service.ContainerCommand != "" {
+		json.Unmarshal([]byte(*service.ContainerCommand), &command)
+	}
+
 	// Build the deployment job
 	job := redis.DeploymentJob{
 		Type:           deployType,
@@ -262,6 +269,7 @@ func DeployService(deployType string, deploymentID *string, serviceID string) er
 		Ports:              ports,
 		Domains:            domains,
 		ScaleToZeroEnabled: scaleToZeroEnabled,
+		Command:            command,
 	}
 
 	// Add probes for HTTP services
@@ -289,9 +297,9 @@ func DeployService(deployType string, deploymentID *string, serviceID string) er
 		}
 	}
 
-	// Add storage for database services
+	// Add storage if configured (for database services and web/private with persistent storage)
 	if service.StorageCapacity != nil {
-		storageClass := "standard"
+		storageClass := "hcloud-volumes"
 		if service.StorageClass != nil {
 			storageClass = *service.StorageClass
 		}
@@ -317,4 +325,3 @@ func DeployService(deployType string, deploymentID *string, serviceID string) er
 
 	return nil
 }
-

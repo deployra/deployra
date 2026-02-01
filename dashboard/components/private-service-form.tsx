@@ -50,6 +50,16 @@ const applicationServiceFormSchema = z.object({
   ).default([{ servicePort: 80, containerPort: 3000 }]),
   instanceTypeId: z.string().min(1, { message: "Please select an instance type" }),
   sourceCode: z.boolean().default(false),
+  storageEnabled: z.boolean().default(false),
+  storageCapacity: z
+    .number()
+    .min(10)
+    .refine(
+      (val) => val % 5 === 0,
+      { message: "Storage must be a multiple of 5 GB" }
+    )
+    .optional(),
+  containerCommand: z.string().optional(),
 });
 
 // Form types
@@ -102,6 +112,9 @@ export function PrivateServiceForm({
       environmentVariables: [],
       portSettings: [{ servicePort: 80, containerPort: 3000 }],
       sourceCode: false,
+      storageEnabled: false,
+      storageCapacity: 10,
+      containerCommand: "",
     },
   });
 
@@ -851,6 +864,29 @@ export function PrivateServiceForm({
                 <PlusCircle className="h-4 w-4" /> Add Port Mapping
               </Button>
             </div>
+          </div>
+
+          <div className="border rounded-lg p-6 shadow-sm">
+            <h3 className="text-lg font-medium mb-4">Advanced Settings</h3>
+            <FormField
+              control={form.control}
+              name="containerCommand"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Container Command (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder='e.g., node server.js or python -m flask run'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Overrides the default container ENTRYPOINT/CMD. Enter the command as you would in a shell.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
           <div className={instanceTypeContainerClass(!!form.formState.errors.instanceTypeId)}>

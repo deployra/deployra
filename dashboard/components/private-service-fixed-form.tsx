@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { 
   ServiceType, 
   InstanceTypeGroup, 
@@ -65,6 +65,7 @@ export function PrivateServiceFixedForm({
       sourceCode: false,
       storageEnabled: false,
       storageCapacity: 10,
+      containerCommand: "",
     },
     mode: "onChange",
   });
@@ -152,6 +153,30 @@ export function PrivateServiceFixedForm({
             control={form.control}
             watch={form.watch}
           />
+
+          {/* Advanced Settings Section */}
+          <div className="border rounded-lg p-6 shadow-sm">
+            <h3 className="text-lg font-medium mb-4">Advanced Settings</h3>
+            <FormField
+              control={form.control}
+              name="containerCommand"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Container Command (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder='e.g., node server.js or python -m flask run'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Overrides the default container ENTRYPOINT/CMD. Enter the command as you would in a shell.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           {/* Instance Type Section */}
           <InstanceTypeSection

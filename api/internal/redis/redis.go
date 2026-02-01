@@ -155,6 +155,7 @@ type DeploymentJob struct {
 	Ports                []Port              `json:"ports,omitempty"`
 	Domains              []string            `json:"domains,omitempty"`
 	ScaleToZeroEnabled   bool                `json:"scaleToZeroEnabled"`
+	Command              []string            `json:"command,omitempty"`
 }
 
 type EnvironmentVariable struct {

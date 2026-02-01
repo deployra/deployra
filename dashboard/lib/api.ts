@@ -251,14 +251,15 @@ export function restartService(serviceId: string): Promise<{ message: string }> 
 }
 
 // Service update API functions
-export function updateServiceSettings(serviceId: string, data: { 
-  name?: string; 
-  customDomain?: string | null, 
-  healthCheckPath?: string, 
+export function updateServiceSettings(serviceId: string, data: {
+  name?: string;
+  customDomain?: string | null,
+  healthCheckPath?: string,
   autoDeployEnabled?: boolean,
   instanceTypeId?: string,
   storageCapacity?: number,
-  portSettings?: { servicePort: number; containerPort: number }[]
+  portSettings?: { servicePort: number; containerPort: number }[],
+  containerCommand?: string | null
 }): Promise<Service> {
   return fetchApi<Service>(`/services/${serviceId}`, {
     method: "PATCH",

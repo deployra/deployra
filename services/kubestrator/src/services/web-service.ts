@@ -60,6 +60,7 @@ export function createWebServiceDeploymentManifest(deploymentName: string, confi
 						name: config.serviceId,
 						image: config.containerRegistry.imageUri,
 						imagePullPolicy: "Always",
+						...(config.command && config.command.length > 0 ? { command: config.command } : {}),
 						ports: config.ports?.map((port, index) => ({
 							containerPort: port.containerPort,
 							name: `port-${index}`,
@@ -175,6 +176,7 @@ export function createWebServiceDeploymentCompletePatch(config: KubeDeploymentCo
 						{
 							name: config.serviceId,
 							image: config.containerRegistry.imageUri,
+							...(config.command && config.command.length > 0 ? { command: config.command } : {}),
 							...(config.resources && { resources: config.resources }),
 							ports: portsWithPatchDirective,
 							...(envSecretName && {

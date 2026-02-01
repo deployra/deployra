@@ -39,6 +39,7 @@ export const applicationServiceFormSchema = z.object({
       { message: "Storage must be a multiple of 5 GB" }
     )
     .optional(),
+  containerCommand: z.string().optional(),
 });
 
 // Form types

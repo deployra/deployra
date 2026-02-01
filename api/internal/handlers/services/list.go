@@ -98,6 +98,7 @@ func List(c *fiber.Ctx) error {
 			"targetReplicas":            service.TargetReplicas,
 			"storageCapacity":           service.StorageCapacity,
 			"scalingStatus":             service.ScalingStatus,
+			"containerCommand":          service.ContainerCommand,
 		}
 	}
 

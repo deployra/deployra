@@ -200,6 +200,7 @@ model Service {
   storageCapacityChangedAt     DateTime?
   storageClass                 String?
   storageUsage                 Float?
+  containerCommand             String?              @db.Text
   scalingStatus                ServiceScalingStatus @default(IDLE)
   scalingHistory               ServiceScalingHistory[]
   metrics                      ServiceMetrics[]

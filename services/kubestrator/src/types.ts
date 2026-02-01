@@ -89,4 +89,5 @@ export interface KubeDeploymentConfig {
     database: string;
   };
   scaleToZeroEnabled: boolean;
+  command?: string[];
 }
