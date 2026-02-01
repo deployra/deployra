@@ -976,16 +976,18 @@ export default function ServiceSettingsPage() {
         </Card>
       )}
 
-      {/* Storage Capacity Card - Only for MySQL and Memory */}
-      {!loading && service && (service.serviceTypeId === "mysql"/* || service.serviceTypeId === "memory"*/) && (
+      {/* Storage Capacity Card - For MySQL, PostgreSQL, and Web/Private services with storage */}
+      {!loading && service && (service.serviceTypeId === "mysql" || service.serviceTypeId === "postgresql" || ((service.serviceTypeId === "web" || service.serviceTypeId === "private") && storageCapacity > 0)) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               Storage Capacity
             </CardTitle>
             <CardDescription>
-              Configure the storage capacity for your {service.serviceTypeId === "mysql" ? "MySQL" : service.serviceTypeId === "postgresql" ? "PostgreSQL" : service.serviceTypeId === "memory" ? "Memory" : "Unknown"} service. 
-              Storage capacity can only be increased, not decreased.
+              {service.serviceTypeId === "web" || service.serviceTypeId === "private"
+                ? "Configure the persistent storage capacity for your service. Storage capacity can only be increased, not decreased. Note: Scaling is disabled when storage is attached."
+                : `Configure the storage capacity for your ${service.serviceTypeId === "mysql" ? "MySQL" : service.serviceTypeId === "postgresql" ? "PostgreSQL" : service.serviceTypeId === "memory" ? "Memory" : "Unknown"} service. Storage capacity can only be increased, not decreased.`
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>

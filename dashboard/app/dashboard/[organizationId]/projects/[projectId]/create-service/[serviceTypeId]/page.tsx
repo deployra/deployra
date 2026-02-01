@@ -182,15 +182,30 @@ export default function ServiceTypePage() {
           toast.error('Storage capacity is required for PostgreSQL services');
           return;
         }
-        
+
         if (values.storageCapacity < 10) {
           toast.error('PostgreSQL storage capacity must be at least 10GB');
           return;
         }
-        
+
         serviceData.storageCapacity = values.storageCapacity;
       }
-      
+
+      // Add storage capacity if storage is enabled (optional for web/private)
+      if ((values.serviceTypeId === 'web' || values.serviceTypeId === 'private') && values.storageEnabled) {
+        if (!values.storageCapacity) {
+          toast.error('Storage capacity is required when storage is enabled');
+          return;
+        }
+
+        if (values.storageCapacity < 10) {
+          toast.error('Storage capacity must be at least 10GB');
+          return;
+        }
+
+        serviceData.storageCapacity = values.storageCapacity;
+      }
+
       try {
         await createService(serviceData);
         

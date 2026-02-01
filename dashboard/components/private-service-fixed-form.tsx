@@ -5,8 +5,6 @@ import { useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
-
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -25,6 +23,7 @@ import { SourceCodeSection } from './create-service/source-code-section';
 import { EnvironmentVariablesSection } from './create-service/environment-variables-section';
 import { PortSettingsSection } from './create-service/port-settings-section';
 import { InstanceTypeSection } from './create-service/instance-type-section';
+import { StorageSection } from './create-service/storage-section';
 
 // Base form props interface
 interface BaseFormProps {
@@ -64,7 +63,10 @@ export function PrivateServiceFixedForm({
       environmentVariables: [],
       portSettings: [{ servicePort: 80, containerPort: 3000 }],
       sourceCode: false,
+      storageEnabled: false,
+      storageCapacity: 10,
     },
+    mode: "onChange",
   });
 
   const instanceTypeId = form.watch('instanceTypeId');
@@ -141,6 +143,12 @@ export function PrivateServiceFixedForm({
 
           {/* Port Settings Section */}
           <PortSettingsSection
+            control={form.control}
+            watch={form.watch}
+          />
+
+          {/* Storage Section */}
+          <StorageSection
             control={form.control}
             watch={form.watch}
           />

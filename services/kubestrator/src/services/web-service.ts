@@ -25,13 +25,18 @@ export function createWebServiceDeploymentManifest(deploymentName: string, confi
 			},
 		},
 		spec: {
-			replicas: config.scaling?.replicas || config.scaling?.minReplicas || 1,
+			// If storage is attached, force replicas to 1 (RWO PVC can only be mounted by one pod)
+			replicas: config.storage ? 1 : (config.scaling?.replicas || config.scaling?.minReplicas || 1),
 			selector: {
 				matchLabels: {
 					service: config.serviceId,
 				},
 			},
-			strategy: {
+			// If storage is attached, use Recreate strategy (RWO PVC requires single pod)
+			// Otherwise use RollingUpdate for zero-downtime deployments
+			strategy: config.storage ? {
+				type: 'Recreate'
+			} : {
 				type: 'RollingUpdate',
 				rollingUpdate: {
 					maxSurge: 1,
@@ -212,11 +217,13 @@ export function createWebServiceDeploymentCompletePatch(config: KubeDeploymentCo
 					})
 				}
 			},
-			...(config.scaling && !config.autoScalingEnabled && {
-				// If auto scaling is disabled, set the replicas explicitly
-				// Don't update it if auto scaling is enabled
+			// If storage is attached, force replicas to 1 (RWO PVC limitation)
+			// Otherwise, if auto scaling is disabled, set replicas from config
+			...(config.storage ? {
+				replicas: 1
+			} : (config.scaling && !config.autoScalingEnabled ? {
 				replicas: config.scaling.replicas || config.scaling.minReplicas || 1
-			})
+			} : {}))
 		}
 	};
 
@@ -320,7 +327,7 @@ export function createWebServicePersistentVolumeManifest(pvName: string, config:
 				storage: config.storage?.size || '1Gi',
 			},
 			accessModes: ['ReadWriteOnce'],
-			storageClassName: config.storage?.storageClass || 'standard',
+			storageClassName: 'hcloud-volumes',
 		},
 	};
 }
@@ -346,7 +353,7 @@ export function createWebServicePersistentVolumeClaimManifest(pvcName: string, c
 					storage: config.storage?.size || '1Gi',
 				},
 			},
-			storageClassName: config.storage?.storageClass || 'standard',
+			storageClassName: 'hcloud-volumes',
 		},
 	};
 }

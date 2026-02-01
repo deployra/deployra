@@ -30,6 +30,15 @@ export const applicationServiceFormSchema = z.object({
   ).default([{ servicePort: 80, containerPort: 3000 }]),
   instanceTypeId: z.string().min(1, { message: "Please select an instance type" }),
   sourceCode: z.boolean().default(false),
+  storageEnabled: z.boolean().default(false),
+  storageCapacity: z
+    .number()
+    .min(10)
+    .refine(
+      (val) => val % 5 === 0,
+      { message: "Storage must be a multiple of 5 GB" }
+    )
+    .optional(),
 });
 
 // Form types

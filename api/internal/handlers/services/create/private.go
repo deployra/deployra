@@ -60,6 +60,7 @@ func createPrivateService(c *fiber.Ctx, user *models.User, req CreateServiceRequ
 		InstanceTypeID:    req.InstanceTypeID,
 		AutoDeployEnabled: autoDeployEnabled,
 		HealthCheckPath:   req.HealthCheckPath,
+		StorageCapacity:   req.StorageCapacity,
 	}
 
 	if len(envVarsJSON) > 0 {

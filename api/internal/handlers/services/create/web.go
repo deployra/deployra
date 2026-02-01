@@ -65,6 +65,7 @@ func createWebService(c *fiber.Ctx, user *models.User, req CreateServiceRequest,
 		InstanceTypeID:    req.InstanceTypeID,
 		AutoDeployEnabled: autoDeployEnabled,
 		HealthCheckPath:   req.HealthCheckPath,
+		StorageCapacity:   req.StorageCapacity,
 	}
 
 	if len(envVarsJSON) > 0 {
