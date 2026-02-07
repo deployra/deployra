@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -26,7 +27,15 @@ func parseContainerCommand(command string) []string {
 		return nil
 	}
 
-	// Check for shell operators
+	// Fallback: try JSON array (backward compat for template-created commands)
+	if strings.HasPrefix(command, "[") {
+		var parsed []string
+		if err := json.Unmarshal([]byte(command), &parsed); err == nil {
+			return parsed
+		}
+	}
+
+	// Shell operators -> sh -c wrapper
 	if shellOperatorRegex.MatchString(command) {
 		return []string{"sh", "-c", command}
 	}

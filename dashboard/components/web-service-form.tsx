@@ -823,13 +823,15 @@ export function WebServiceForm({
                 <FormItem>
                   <FormLabel>Container Command (Optional)</FormLabel>
                   <FormControl>
-                    <Input
+                    <Textarea
                       placeholder='e.g., node server.js or python -m flask run'
+                      rows={3}
+                      className="font-mono text-sm"
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    Overrides the default container ENTRYPOINT/CMD. Enter the command as you would in a shell.
+                    Overrides the default container ENTRYPOINT/CMD. Supports multi-line shell scripts.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

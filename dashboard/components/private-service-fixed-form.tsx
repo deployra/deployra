@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { 
   ServiceType, 
@@ -164,13 +165,15 @@ export function PrivateServiceFixedForm({
                 <FormItem>
                   <FormLabel>Container Command (Optional)</FormLabel>
                   <FormControl>
-                    <Input
+                    <Textarea
                       placeholder='e.g., node server.js or python -m flask run'
+                      rows={3}
+                      className="font-mono text-sm"
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    Overrides the default container ENTRYPOINT/CMD. Enter the command as you would in a shell.
+                    Overrides the default container ENTRYPOINT/CMD. Supports multi-line shell scripts.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

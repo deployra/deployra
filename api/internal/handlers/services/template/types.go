@@ -25,6 +25,7 @@ type ServiceTemplate struct {
 	HealthCheckPath *string          `yaml:"healthCheckPath"`
 	Ports           []PortConfig     `yaml:"ports"`
 	StorageCapacity *int             `yaml:"storageCapacity"`
+	Command         []string         `yaml:"command"`
 }
 
 type DatabaseTemplate struct {
@@ -50,6 +51,12 @@ type EnvVarTemplate struct {
 	Value         string              `yaml:"value"`
 	GenerateValue bool                `yaml:"generateValue"`
 	FromDatabase  *FromDatabaseConfig `yaml:"fromDatabase"`
+	FromService   *FromServiceConfig  `yaml:"fromService"`
+}
+
+type FromServiceConfig struct {
+	Name     string `yaml:"name"`
+	Property string `yaml:"property"`
 }
 
 type FromDatabaseConfig struct {
@@ -72,5 +79,6 @@ type EnvironmentVariable struct {
 type CreatedServiceInfo struct {
 	ID          string
 	Name        string
+	Port        int
 	Credentials *models.ServiceCredential
 }

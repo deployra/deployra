@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
@@ -617,14 +618,15 @@ export default function ServiceSettingsPage() {
                   <p className="text-sm text-muted-foreground">
                     Overrides the default container ENTRYPOINT/CMD. Shell operators (&&, ||, |, $, etc.) are automatically detected and wrapped with <code className="bg-muted px-1 rounded">sh -c</code>.
                   </p>
-                  <div className="flex items-center gap-2">
-                    <Input
+                  <div className="flex items-start gap-2">
+                    <Textarea
                       id="container-command"
                       value={containerCommandState || ''}
                       onChange={(e) => setContainerCommandState(e.target.value)}
                       placeholder="e.g., node server.js or python -m flask run"
                       disabled={!containerCommandEditing}
-                      className="flex-1"
+                      rows={3}
+                      className="flex-1 font-mono text-sm"
                     />
                     {!containerCommandEditing ? (
                       <Button

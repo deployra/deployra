@@ -225,6 +225,35 @@ func createServiceFromTemplate(db *gorm.DB, user *models.User, template ServiceT
 				} else {
 					log.Printf("Database service '%s' not found or has no credentials", envVar.FromDatabase.Name)
 				}
+			} else if envVar.FromService != nil {
+				// Find the referenced service by name in created services
+				var refService *CreatedServiceInfo
+				for i, s := range createdServices {
+					if s.Name == envVar.FromService.Name {
+						refService = &createdServices[i]
+						break
+					}
+				}
+
+				if refService != nil {
+					var value string
+					switch envVar.FromService.Property {
+					case "host":
+						value = refService.ID + "-service"
+					case "port":
+						value = fmt.Sprintf("%d", refService.Port)
+					default:
+						log.Printf("Unknown service property '%s' for service '%s'", envVar.FromService.Property, envVar.FromService.Name)
+						continue
+					}
+
+					envVars = append(envVars, EnvironmentVariable{
+						Key:   envVar.Key,
+						Value: value,
+					})
+				} else {
+					log.Printf("Service '%s' not found in created services", envVar.FromService.Name)
+				}
 			}
 		}
 
@@ -262,6 +291,17 @@ func createServiceFromTemplate(db *gorm.DB, user *models.User, template ServiceT
 
 	if len(envVarsJSON) > 0 {
 		service.EnvironmentVariables = envVarsJSON
+	}
+
+	// Add container command if specified (store as plain string, parseContainerCommand handles wrapping)
+	if len(template.Command) > 0 {
+		var commandStr string
+		if len(template.Command) == 1 {
+			commandStr = template.Command[0]
+		} else {
+			commandStr = strings.Join(template.Command, " ")
+		}
+		service.ContainerCommand = &commandStr
 	}
 
 	// Add image-specific parameters
@@ -316,9 +356,16 @@ func createServiceFromTemplate(db *gorm.DB, user *models.User, template ServiceT
 		"healthCheckPath": service.HealthCheckPath,
 	}
 
+	// Determine port for CreatedServiceInfo
+	var servicePort int
+	if len(template.Ports) > 0 {
+		servicePort = template.Ports[0].ContainerPort
+	}
+
 	return &CreatedServiceInfo{
 		ID:   service.ID,
 		Name: service.Name,
+		Port: servicePort,
 	}, serviceResponse, nil
 }
 
@@ -405,6 +452,7 @@ func createDatabaseFromTemplate(db *gorm.DB, template DatabaseTemplate, projectI
 	return &CreatedServiceInfo{
 		ID:          service.ID,
 		Name:        service.Name,
+		Port:        port,
 		Credentials: &credential,
 	}, serviceResponse, nil
 }
@@ -475,6 +523,7 @@ func createMemoryFromTemplate(db *gorm.DB, template MemoryTemplate, projectID st
 	return &CreatedServiceInfo{
 		ID:          service.ID,
 		Name:        service.Name,
+		Port:        6379,
 		Credentials: &credential,
 	}, serviceResponse, nil
 }
