@@ -48,6 +48,36 @@ export function createPrivateServiceDeploymentManifest(deploymentName: string, c
 				spec: {
 					enableServiceLinks: false,
 					automountServiceAccountToken: false,
+					...(config.storage ? {
+						initContainers: [
+							{
+								name: 'resize-filesystem',
+								image: 'debian:stable-slim',
+								command: ['/bin/sh', '-c'],
+								args: [
+									'apt-get update && ' +
+									'apt-get install -y e2fsprogs && ' +
+									'DEVICES=$(lsblk -d -n -o NAME | grep "^sd") && ' +
+									'for DEVICE in $DEVICES; do ' +
+									'  if [ -b "/dev/$DEVICE" ]; then ' +
+									'    echo "Attempting to resize /dev/$DEVICE" && ' +
+									'    resize2fs "/dev/$DEVICE" || echo "Failed to resize /dev/$DEVICE" ; ' +
+									'  fi; ' +
+									'done && ' +
+									'chmod -R 777 /data'
+								],
+								securityContext: {
+									privileged: true
+								},
+								volumeMounts: [
+									{
+										name: 'data-volume',
+										mountPath: '/data'
+									}
+								]
+							}
+						],
+					} : {}),
 					containers: [{
 						name: config.serviceId,
 						image: config.containerRegistry.imageUri,
